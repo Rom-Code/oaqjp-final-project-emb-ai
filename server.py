@@ -15,9 +15,9 @@ def emotion_analyzer():
     # Pass the text to the emotion_detector function and store the response
     result = emotion_detector(text_to_analyze)
 
-    # Check if the result is a string or a dictionary
-    if isinstance(result, str):
-        response_str = result
+    # Check if the dominant_emotion is None and respond accordingly
+    if result.get('dominant_emotion') is None:
+        response_str = "Invalid text! Please try again."
     else:
         # Format the dictionary response into a readable string
         emotions = [f"'{key}': {value}" for key, value in result.items() if value is not None]

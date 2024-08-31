@@ -9,48 +9,87 @@ def emotion_detector(text_to_analyze):
             "text": text_to_analyze
         }
     }
-    
+
+    # Check for blank entries
+    if not text_to_analyze.strip():
+        return {
+            'status_code': 400,
+            'anger': None,
+            'disgust': None,
+            'fear': None,
+            'joy': None,
+            'sadness': None,
+            'dominant_emotion': None
+        }
+
     try:
         response = requests.post(url, headers=headers, json=input_json)
-        
+
+        # Check if the response status code is 400
+        if response.status_code == 400:
+            return {
+                'status_code': 400,
+                'anger': None,
+                'disgust': None,
+                'fear': None,
+                'joy': None,
+                'sadness': None,
+                'dominant_emotion': None
+            }
+
         # Convert response text into a dictionary
         response_json = response.json()
-        
-        # Log the entire response for debugging
-        #print("Response Status Code:", response.status_code)
-        #print("Response JSON:", response_json)
-        
-        # Extract emotion predictions
-        if 'emotionPredictions' in response_json and len(response_json['emotionPredictions']) > 0:
-            emotions = response_json['emotionPredictions'][0]['emotion']
-            
-            # Extract the relevant emotions
-            required_emotions = ['anger', 'disgust', 'fear', 'joy', 'sadness']
-            emotion_scores = {emotion: emotions.get(emotion, 0) for emotion in required_emotions}
-            
-            # Log emotion scores for debugging
-            #print("Emotion Scores:", emotion_scores)
-            
-            # Ensure all values in emotion_scores are numeric
-            if all(isinstance(score, (int, float)) for score in emotion_scores.values()):
-                # Find the dominant emotion
-                dominant_emotion = max(emotion_scores, key=emotion_scores.get)
-                
-                # Return the result in the required format
-                result = (
-                    f" Response Status Code:{response.status_code}\n"
-                    f"Emotion Scores:\n"
-                    f"  Anger: {emotion_scores['anger']}\n"
-                    f"  Disgust: {emotion_scores['disgust']}\n"
-                    f"  Fear: {emotion_scores['fear']}\n"
-                    f"  Joy: {emotion_scores['joy']}\n"
-                    f"  Sadness: {emotion_scores['sadness']}\n"
-                    f"Dominant Emotion: {dominant_emotion}"
-                )
-                return result
-            else:
-                return "Error: Non-numeric values found in emotion scores"
+
+        # Check if the response contains 'emotionPredictions'
+        if 'emotionPredictions' not in response_json or len(response_json['emotionPredictions']) == 0:
+            return {
+                'status_code': response.status_code,
+                'anger': None,
+                'disgust': None,
+                'fear': None,
+                'joy': None,
+                'sadness': None,
+                'dominant_emotion': None
+            }
+
+        emotions = response_json['emotionPredictions'][0]['emotion']
+
+        # Extract the relevant emotions
+        required_emotions = ['anger', 'disgust', 'fear', 'joy', 'sadness']
+        emotion_scores = {emotion: emotions.get(emotion, 0) for emotion in required_emotions}
+
+        # Ensure all values in emotion_scores are numeric
+        if all(isinstance(score, (int, float)) for score in emotion_scores.values()):
+            # Find the dominant emotion
+            dominant_emotion = max(emotion_scores, key=emotion_scores.get)
+            return {
+                'status_code': response.status_code,
+                'anger': emotion_scores['anger'],
+                'disgust': emotion_scores['disgust'],
+                'fear': emotion_scores['fear'],
+                'joy': emotion_scores['joy'],
+                'sadness': emotion_scores['sadness'],
+                'dominant_emotion': dominant_emotion
+            }
         else:
-            return "No emotion predictions found in response"
+            return {
+                'status_code': response.status_code,
+                'anger': None,
+                'disgust': None,
+                'fear': None,
+                'joy': None,
+                'sadness': None,
+                'dominant_emotion': None
+            }
+
     except Exception as e:
-        return f"An error occurred: {str(e)}"
+        # Handle exceptions and return None values with a status code
+        return {
+            'status_code': 500,
+            'anger': None,
+            'disgust': None,
+            'fear': None,
+            'joy': None,
+            'sadness': None,
+            'dominant_emotion': None
+        }
